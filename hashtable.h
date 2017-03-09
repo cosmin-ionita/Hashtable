@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct Node Node;
 typedef struct Bucket Bucket;
@@ -29,5 +30,8 @@ struct Hashtable
 
 Hashtable* create_hashtable(Hashtable* hashtable, int size);
 void clear_hashtable(Hashtable* hashtable);
+
+void add_word(Hashtable* hashtable, char* word);
+void print_bucket(Hashtable* hashtable, int bucket_index);
 
 #endif
