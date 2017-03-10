@@ -14,12 +14,14 @@ int main()
 	add_word(hashtable, "xzzz");
 	add_word(hashtable, "1122");
 
-	printf("b0: ->");
+	print_hashtable(hashtable);
 
-	print_bucket(hashtable, 0);
+	hashtable = make_double(hashtable);
 
-	printf("b1: ->");
-	print_bucket(hashtable, 1);
+
+	print_hashtable(hashtable);
+	
+
 
 	clear_hashtable(hashtable);
 
