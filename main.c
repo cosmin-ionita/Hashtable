@@ -7,8 +7,6 @@ int main()
 	Hashtable* hashtable;
 
 	hashtable = create_hashtable(hashtable, 2);
-
-	
 	
 	add_word(hashtable, str);
 	add_word(hashtable, "boss");
@@ -22,7 +20,6 @@ int main()
 
 	printf("b1: ->");
 	print_bucket(hashtable, 1);
-
 
 	clear_hashtable(hashtable);
 
