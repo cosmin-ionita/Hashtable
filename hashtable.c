@@ -68,12 +68,18 @@ int print_hashtable(Hashtable* hashtable, FILE* out_file)
 		
 		while(current_node != NULL)
 		{
-			fprintf(out_file, "%s ", current_node->word);
+			if(current_node->next_node == NULL)
+			{
+				fprintf(out_file, "%s", current_node->word);
+				fprintf(out_file, "\n");
+			}
+			else
+			{	
+				fprintf(out_file, "%s ", current_node->word);
+			}
+				
 			current_node = current_node->next_node;
-		}
-
-		if(current_node != current_node_copy)
-			fprintf(out_file, "\n");
+		}	
 	}
 	
 	return return_code;
