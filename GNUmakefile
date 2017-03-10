@@ -1,5 +1,5 @@
 build: hashtable.o main.o
-	gcc hashtable.o main.o -o tema1
+	gcc hashtable.o main.o -o tema1 -lhash -L.
 
 main.o: main.c
 	gcc -c main.c -o main.o

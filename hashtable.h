@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hash.h"
+
 typedef struct Node Node;
 typedef struct Bucket Bucket;
 typedef struct Hashtable Hashtable;
