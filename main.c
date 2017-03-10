@@ -5,7 +5,7 @@
 
 #define COMM_SIZE 20000
 
-int process_command(char* command, Hashtable* hashtable);
+int process_command(char *command, Hashtable* hashtable);
 
 int launch_add(Hashtable* hashtable);
 int launch_remove(Hashtable* hashtable);
@@ -15,18 +15,19 @@ int launch_print_bucket(Hashtable* hashtable);
 int launch_clear(Hashtable* hashtable);
 int launch_resize(Hashtable* hashtable);
 
-Hashtable* global_hashtable = NULL;
+Hashtable* main_hashtable;
 
 int main(int argc, char** argv)
 {
 	FILE* in_file;
-	int i = 0, return_code = 0;
+	int i = 0, code = 0;
 	char* result;
 	char command[COMM_SIZE];
 
-	global_hashtable = create_hashtable(global_hashtable, atoi(argv[1]));
+	if(argc > 1)
+		main_hashtable = create_hashtable(main_hashtable, atoi(argv[1]));
 	
-	if(argc > 2)
+	if (argc > 2)
 	{
 		for(i = 2; i<argc; i++)
 		{
@@ -38,17 +39,14 @@ int main(int argc, char** argv)
 				result = fgets(command, COMM_SIZE, in_file);
 				
 				if(result != NULL && result[0] != '\n')
-				{	
-					return_code = process_command(command, global_hashtable);
-					DIE(return_code < 0, "The command couldn't be processed");
+				{
+					code = process_command(command, main_hashtable);
+					DIE(code < 0, "Command error!");
 				}
 			}
 		}
 	}
-	else
-	{
-		//read from stdin!
-	}
+	// stdin input (TODO)
 	
 	return 0;
 }
@@ -66,10 +64,10 @@ int process_command(char* command, Hashtable* hashtable)
 	
 	if(strcmp(token, "add") == 0)
 		return_code = launch_add(hashtable);
-		
+	
 	else if(strcmp(token, "remove") == 0)
 		return_code = launch_remove(hashtable);
-
+	
 	else if(strcmp(token, "print_bucket") == 0)
 		return_code = launch_print_bucket(hashtable);
 	
@@ -83,9 +81,7 @@ int process_command(char* command, Hashtable* hashtable)
 		return_code = launch_resize(hashtable);
 	
 	else if(strcmp(token, "print") == 0)
-	{
 		return_code = launch_print_hashtable(hashtable);
-	}
 	
 	return return_code;
 }
@@ -186,11 +182,11 @@ int launch_resize(Hashtable* hashtable)
 		
 	if(strcmp(token, "double"))
 	{
-		global_hashtable = make_double(hashtable);
+		main_hashtable = make_double(hashtable);
 	}
 	else if(strcmp(token, "halve"))
 	{
-		global_hashtable = make_half(hashtable);
+		main_hashtable = make_half(hashtable);
 	}
 	
 	return return_code;
