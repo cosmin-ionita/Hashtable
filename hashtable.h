@@ -35,12 +35,12 @@ Hashtable* make_half(Hashtable* hashtable);
 
 void clear_hashtable(Hashtable* hashtable);
 
-void add_word(Hashtable* hashtable, char* word);
-void remove_word(Hashtable* hashtable, char* word);
+int add_word(Hashtable* hashtable, char* word);
+int remove_word(Hashtable* hashtable, char* word);
 
-void print_bucket(Hashtable* hashtable, int bucket_index);
-void print_hashtable(Hashtable* hashtable);
+void print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file);
+void print_hashtable(Hashtable* hashtable, FILE* out_file);
 
-char* find_word(Hashtable* hashtable, char* word);
+int find_word(Hashtable* hashtable, char* word, FILE* out_file);
 
 #endif

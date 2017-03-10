@@ -5,7 +5,7 @@ Hashtable* create_hashtable(Hashtable* hashtable, int size)
 {
 	int i = 0;
 	
-	hashtable = (Hashtable*)malloc(sizeof(Hashtable));
+	hashtable = malloc(sizeof(Hashtable));
 
 	hashtable->size = size;
 
@@ -24,7 +24,7 @@ Hashtable* resize_hashtable(Hashtable* hashtable, int size)
 	int i = 0;
 	Node* current_node;
 
-	Hashtable* new_hashtable;
+	Hashtable* new_hashtable = NULL;
 
 	new_hashtable = create_hashtable(new_hashtable, size);
 
@@ -78,7 +78,7 @@ void print_hashtable(Hashtable* hashtable)
 	}
 }
 
-char* find_word(Hashtable* hashtable, char* word)
+int find_word(Hashtable* hashtable, char* word, FILE* out_file)
 {
 	int position = hash(word, hashtable->size);
 
@@ -86,18 +86,17 @@ char* find_word(Hashtable* hashtable, char* word)
 
 	if(current_node != NULL)
 	{
-
 		while(current_node != NULL)
 		{
 			if(strcmp(current_node->word, word) == 0)
 			{
-				return "True";
+				fprintf(out_file, "%s\n", "True");
 			}
 			current_node = current_node->next_node;
 		}
-
-		return "False";
 	}
+	
+	fprintf(out_file, "%s\n", "False");
 }
 
 void clear_hashtable(Hashtable* hashtable)
@@ -128,7 +127,7 @@ void clear_hashtable(Hashtable* hashtable)
 	free(hashtable);
 }
 
-void add_word(Hashtable* hashtable, char* word)
+int add_word(Hashtable* hashtable, char* word)
 {
 	int position = hash(word, hashtable->size);
 	
@@ -165,7 +164,7 @@ void add_word(Hashtable* hashtable, char* word)
 	
 }
 
-void remove_word(Hashtable* hashtable, char* word)
+int remove_word(Hashtable* hashtable, char* word)
 {
 	int position = hash(word, hashtable->size);
 	Node* temp = NULL;
@@ -174,7 +173,6 @@ void remove_word(Hashtable* hashtable, char* word)
 
 	if(current_node != NULL)
 	{
-
 		while(strcmp(current_node->word, word) != 0)
 		{
 			back_node = current_node;
@@ -193,22 +191,27 @@ void remove_word(Hashtable* hashtable, char* word)
 		free(current_node->word);
 		free(current_node);
 	}
+	
+	return 0;
 }
 
-void print_bucket(Hashtable* hashtable, int bucket_index)
+void print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
 {
 	Node* current_node = hashtable->buckets[bucket_index].bucket_head;
 
 	if(current_node != NULL)
 	{
-
-		printf("am asa 1: %s\n", current_node->word);
+		fprintf(out_file, "%s ", current_node->word);
 
 		current_node = current_node->next_node;
 
 		while(current_node != NULL)
 		{
-			printf("am asa 2: %s\n", current_node->word);
+			if(current_node->next_node == NULL)
+				fprintf(out_file, "%s ", current_node->word);
+			else
+				fprintf(out_file, "%s", current_node->word);
+			
 			current_node = current_node->next_node;
 		}
 	}
