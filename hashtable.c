@@ -3,11 +3,20 @@
 
 Hashtable* create_hashtable(Hashtable* hashtable, int size)
 {
+	int i = 0;
+	
 	hashtable = (Hashtable*)malloc(sizeof(Hashtable));
 
 	hashtable->size = size;
 
 	hashtable->buckets = malloc(size * sizeof(Bucket));
+	
+	for(i = 0; i<size; i++)
+	{
+		hashtable->buckets[i].bucket_head = malloc(sizeof(Node));
+		hashtable->buckets[i].bucket_head->next_node = NULL;
+		hashtable->buckets[i].bucket_head->word = NULL;
+	}
 
 	return hashtable;
 }
@@ -27,7 +36,7 @@ void add_word(Hashtable* hashtable, char* word)
 	Node* new_node = NULL;
 	Node* current_node = NULL;
 	
-	if(hashtable->buckets[position].bucket_head == NULL)
+	if(hashtable->buckets[position].bucket_head->next_node == NULL)
 	{
 		printf("IS NULL");
 		/*hashtable->buckets[position].bucket_head = malloc(sizeof(Node));
@@ -73,5 +82,4 @@ void print_bucket(Hashtable* hashtable, int bucket_index)
 		printf("%s\n", current_node->word);
 		current_node = current_node->next_node;
 	}
-
 }

@@ -23,7 +23,6 @@ struct Bucket
 struct Hashtable
 {
 	int size;
-
 	Bucket* buckets;
 };
 
