@@ -18,7 +18,6 @@ struct Node
 struct Bucket
 {
 	Node* bucket_head;		
-
 };
 
 struct Hashtable

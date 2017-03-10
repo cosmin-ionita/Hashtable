@@ -1,11 +1,11 @@
-build: hashtable.o main.o
-	gcc hashtable.o main.o -o tema1
+build: main.obj hashtable.obj
+	cl /Fetema1.exe main.obj hashtable.obj
 
-main.o: main.c
-	gcc -c main.c -o main.o
-
-hashtable.o: hashtable.c
-	gcc -c hashtable.c -o hashtable.o
+main.obj: main.c
+	cl /Fomain.obj /c main.c
+	
+hashtable.obj: hashtable.c
+	cl /Fohashtable.obj /c hashtable.c
 
 clean:
-	rm *.o tema1
+	del *.obj *.exe

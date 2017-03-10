@@ -3,16 +3,17 @@
 
 int main()
 {
+	char str[10] = "asdad";
 	Hashtable* hashtable;
 
 	hashtable = create_hashtable(hashtable, 10);
 
-	char str[10] = "asdad";
+	
 	
 	add_word(hashtable, str);
-	add_word(hashtable, "boss");
+	//add_word(hashtable, "boss");
 
-	print_bucket(hashtable, 3);
+	//print_bucket(hashtable, 3);
 
 
 	//clear_hashtable(hashtable);
