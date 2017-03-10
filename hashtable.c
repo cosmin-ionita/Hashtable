@@ -13,9 +13,7 @@ Hashtable* create_hashtable(Hashtable* hashtable, int size)
 	
 	for(i = 0; i<size; i++)
 	{
-		hashtable->buckets[i].bucket_head = malloc(sizeof(Node));
-		hashtable->buckets[i].bucket_head->next_node = NULL;
-		hashtable->buckets[i].bucket_head->word = NULL;
+		hashtable->buckets[i].bucket_head = NULL;
 	}
 
 	return hashtable;
@@ -36,18 +34,17 @@ void add_word(Hashtable* hashtable, char* word)
 	Node* new_node = NULL;
 	Node* current_node = NULL;
 	
-	if(hashtable->buckets[position].bucket_head->next_node == NULL)
+	if(hashtable->buckets[position].bucket_head == NULL)
 	{
 		printf("IS NULL");
-		/*hashtable->buckets[position].bucket_head = malloc(sizeof(Node));
-	
+
 		new_node = malloc(sizeof(Node));
 		new_node->next_node = NULL;
 		new_node->word = malloc(strlen(word) * sizeof(char));
 		strcpy(new_node->word, word);
 
 		hashtable->buckets[position].bucket_head = new_node;
-	*/}
+	}
 	else
 	{
 	printf("IS NOT NULL");
