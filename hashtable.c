@@ -43,7 +43,6 @@ Hashtable* resize_hashtable(Hashtable* hashtable, int size)
 	clear_hashtable(hashtable);
 
 	return new_hashtable;
-
 }
 
 Hashtable* make_double(Hashtable* hashtable)
@@ -56,31 +55,33 @@ Hashtable* make_half(Hashtable* hashtable)
 	return resize_hashtable(hashtable, hashtable->size / 2);
 }
 
-void print_hashtable(Hashtable* hashtable)
+int print_hashtable(Hashtable* hashtable, FILE* out_file)
 {
-	int i = 0;
+	int i = 0, return_code = 0;
 	Node* current_node;
 	Node* current_node_copy;
-
+	
 	for(i = 0; i<hashtable->size; i++)
 	{
 		current_node = hashtable->buckets[i].bucket_head;
 		current_node_copy = current_node;
-
+		
 		while(current_node != NULL)
 		{
-			printf("%s ", current_node->word); 
+			fprintf(out_file, "%s ", current_node->word);
 			current_node = current_node->next_node;
 		}
 
 		if(current_node != current_node_copy)
-			printf("\n");
+			fprintf(out_file, "\n");
 	}
+	
+	return return_code;
 }
 
 int find_word(Hashtable* hashtable, char* word, FILE* out_file)
 {
-	int position = hash(word, hashtable->size);
+	int position = hash(word, hashtable->size), return_code = -1;
 
 	Node* current_node = hashtable->buckets[position].bucket_head;
 
@@ -91,12 +92,20 @@ int find_word(Hashtable* hashtable, char* word, FILE* out_file)
 			if(strcmp(current_node->word, word) == 0)
 			{
 				fprintf(out_file, "%s\n", "True");
+				return_code = 0;
+				
+				break;
 			}
 			current_node = current_node->next_node;
 		}
 	}
+	else
+		return_code = -1;
 	
-	fprintf(out_file, "%s\n", "False");
+	if(return_code == -1)
+		fprintf(out_file, "%s\n", "False");
+	
+	return return_code;
 }
 
 void clear_hashtable(Hashtable* hashtable)
@@ -127,8 +136,23 @@ void clear_hashtable(Hashtable* hashtable)
 	free(hashtable);
 }
 
+Node* get_new_node(char* word)
+{
+	Node* new_node;
+	
+	new_node = malloc(sizeof(Node));
+	new_node->next_node = NULL;
+	new_node->word = malloc((strlen(word) + 1) * sizeof(char));
+
+	strcpy(new_node->word, word);
+		
+	return new_node;
+}
+
 int add_word(Hashtable* hashtable, char* word)
 {
+	int return_code = 0;	// 0 - success, 1 - the word already exist
+	
 	int position = hash(word, hashtable->size);
 	
 	Node* new_node = NULL;
@@ -136,13 +160,11 @@ int add_word(Hashtable* hashtable, char* word)
 	
 	if(hashtable->buckets[position].bucket_head == NULL)
 	{
-		new_node = malloc(sizeof(Node));
-		new_node->next_node = NULL;
-		new_node->word = malloc((strlen(word) + 1) * sizeof(char));
-
-		strcpy(new_node->word, word);
+		Node* new_node = get_new_node(word);
 
 		hashtable->buckets[position].bucket_head = new_node;
+		
+		return_code = 0;
 	}
 	else
 	{
@@ -150,69 +172,85 @@ int add_word(Hashtable* hashtable, char* word)
 
 		while(current_node->next_node != NULL)
 		{
+			if(strcmp(current_node->word, word) == 0)
+			{
+				return_code = -1;
+				break;
+			}
 			current_node = current_node->next_node;
 		}
 
-		new_node = malloc(sizeof(Node));
-		new_node->next_node = NULL;
-
-		new_node->word = malloc((strlen(word) + 1) * sizeof(char));
-		strcpy(new_node->word, word);
-
+		new_node = get_new_node(word);
+		
 		current_node->next_node = new_node;
 	}
 	
+	return return_code;
 }
 
 int remove_word(Hashtable* hashtable, char* word)
 {
-	int position = hash(word, hashtable->size);
-	Node* temp = NULL;
+	int position = hash(word, hashtable->size), return_code = 0;
+
 	Node* current_node = hashtable->buckets[position].bucket_head;
 	Node* back_node = current_node;
 
 	if(current_node != NULL)
 	{
-		while(strcmp(current_node->word, word) != 0)
+		while(strcmp(current_node->word, word) != 0 && current_node != NULL)
 		{
 			back_node = current_node;
 			current_node = current_node->next_node;
 		}
-
-		if(back_node == current_node)
-		{
-			hashtable->buckets[position].bucket_head = back_node->next_node;
-		}
+		
+		if(strcmp(current_node->word, word) != 0 && current_node == NULL)
+				return_code = -1;
 		else
 		{
-			back_node->next_node = current_node->next_node;
-		}
+			if(back_node == current_node)	// If we remove the first word in the bucket
+				hashtable->buckets[position].bucket_head = back_node->next_node;
+			else
+				back_node->next_node = current_node->next_node;
 
-		free(current_node->word);
-		free(current_node);
+			free(current_node->word);
+			free(current_node);
+			
+			return_code = 0;
+		}
 	}
+	else
+		return_code = -1;
 	
-	return 0;
+	return return_code;
 }
 
-void print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
+int print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
 {
-	Node* current_node = hashtable->buckets[bucket_index].bucket_head;
-
-	if(current_node != NULL)
+	int return_code = 0;
+	
+	if(bucket_index >= hashtable->size || bucket_index < 0)
+		return_code = -1;
+	else
 	{
-		fprintf(out_file, "%s ", current_node->word);
+		Node* current_node = hashtable->buckets[bucket_index].bucket_head;
 
-		current_node = current_node->next_node;
-
-		while(current_node != NULL)
+		if(current_node != NULL)
 		{
-			if(current_node->next_node == NULL)
-				fprintf(out_file, "%s ", current_node->word);
-			else
-				fprintf(out_file, "%s", current_node->word);
-			
+			fprintf(out_file, "%s ", current_node->word);
+
 			current_node = current_node->next_node;
+
+			while(current_node != NULL)
+			{
+				if(current_node->next_node == NULL)
+					fprintf(out_file, "%s ", current_node->word);
+				else
+					fprintf(out_file, "%s", current_node->word);
+				
+				current_node = current_node->next_node;
+			}
 		}
 	}
+	
+	return return_code;
 }

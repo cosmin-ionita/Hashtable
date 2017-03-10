@@ -38,8 +38,8 @@ void clear_hashtable(Hashtable* hashtable);
 int add_word(Hashtable* hashtable, char* word);
 int remove_word(Hashtable* hashtable, char* word);
 
-void print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file);
-void print_hashtable(Hashtable* hashtable, FILE* out_file);
+int print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file);
+int print_hashtable(Hashtable* hashtable, FILE* out_file);
 
 int find_word(Hashtable* hashtable, char* word, FILE* out_file);
 
