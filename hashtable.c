@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "hashtable.h"
 
+void free_hashtable(Hashtable* hashtable);
+
 Hashtable* create_hashtable(Hashtable* hashtable, int size)
 {
 	int i = 0;
@@ -40,7 +42,7 @@ Hashtable* resize_hashtable(Hashtable* hashtable, int size)
 		}
 	}
 
-	clear_hashtable(hashtable);
+	free_hashtable(hashtable);
 
 	return new_hashtable;
 }
@@ -52,10 +54,8 @@ Hashtable* make_double(Hashtable* hashtable)
 
 Hashtable* make_half(Hashtable* hashtable)
 {
-	return resize_hashtable(hashtable, hashtable->size / 2);
+	return resize_hashtable(hashtable, (hashtable->size) / 2);
 }
-
-int first_line_printed = 0;
 
 int print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
 {
@@ -75,22 +75,11 @@ int print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
 		{
 			if(current_node->next_node == NULL)
 			{
-				if(first_line_printed == 1 && print_newline == 0)
-				{
-					fprintf(out_file, "\n");
-					print_newline = 1;
-				}
-
 				fprintf(out_file, "%s", current_node->word);
+				fprintf(out_file, "\n");
 			}
 			else
 			{
-				if(first_line_printed == 1 && print_newline == 0)
-				{
-					fprintf(out_file, "\n");
-					print_newline = 1;
-				}
-
 				fprintf(out_file, "%s ", current_node->word);
 			}
 				
@@ -104,16 +93,10 @@ int print_bucket(Hashtable* hashtable, int bucket_index, FILE* out_file)
 int print_hashtable(Hashtable* hashtable, FILE* out_file)
 {
 	int i = 0, return_code = 0;
-
-	first_line_printed = 0;
 	
 	for(i = 0; i<hashtable->size; i++)
 	{
 		return_code = print_bucket(hashtable, i, out_file);
-
-		if(return_code == 0)
-			first_line_printed = 1;
-
 	}
 	
 	return return_code;
@@ -169,9 +152,13 @@ void clear_hashtable(Hashtable* hashtable)
 
 		hashtable->buckets[i].bucket_head = NULL;
 	}
+}
+
+void free_hashtable(Hashtable* hashtable)
+{
+	clear_hashtable(hashtable);
 
 	hashtable->size = 0;
-	
 	free(hashtable->buckets);
 	free(hashtable);
 }
@@ -220,9 +207,12 @@ int add_word(Hashtable* hashtable, char* word)
 			current_node = current_node->next_node;
 		}
 
-		new_node = get_new_node(word);
+		if(strcmp(current_node->word, word) != 0)
+		{
+			new_node = get_new_node(word);
 		
-		current_node->next_node = new_node;
+			current_node->next_node = new_node;
+		}
 	}
 	
 	return return_code;

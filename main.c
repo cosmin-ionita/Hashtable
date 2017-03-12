@@ -26,6 +26,8 @@ int main(int argc, char** argv)
 
 	if(argc > 1)
 		main_hashtable = create_hashtable(main_hashtable, atoi(argv[1]));
+	else
+		fprintf(stderr, "Not OK");
 	
 	if (argc > 2)
 	{
@@ -41,19 +43,43 @@ int main(int argc, char** argv)
 				if(result != NULL && result[0] != '\n')
 				{
 					code = process_command(command, main_hashtable);
-					DIE(code < 0, "Command error!");
+					
+					DIE(code > 0, "Error");
+					
+					if(code < 0)
+						fprintf(stderr, "error");
 				}
 			}
 		}
 	}
-	// stdin input (TODO)
+	else if(argc == 2)
+	{
+		while(!feof(stdin))
+		{
+			result = fgets(command, COMM_SIZE, stdin);
+			
+			if(result != NULL && result[0] != '\n')
+			{
+				code = process_command(command, main_hashtable);
+				
+				DIE(code > 0, "Error");
+				
+				fprintf(stderr, "Error");
+
+			}
+		}
+	}
+	else
+		fprintf(stderr, "NOT OK");
+
+	free_hashtable(main_hashtable);
 	
 	return 0;
 }
 
 int process_command(char* command, Hashtable* hashtable)
 {
-	int return_code = -1;
+	int return_code = 1;
 	char* token;
 	const char delimiter[1] = " ";
 	
@@ -79,7 +105,7 @@ int process_command(char* command, Hashtable* hashtable)
 	
 	else if(strcmp(token, "resize") == 0)
 		return_code = launch_resize(hashtable);
-	
+
 	else if(strcmp(token, "print") == 0)
 		return_code = launch_print_hashtable(hashtable);
 	
@@ -110,18 +136,23 @@ int launch_print_bucket(Hashtable* hashtable)
 {
 	FILE* out_file;
 	
-	int result_code = 0;
+	int result_code = 0, bucket_index = -1;
 	
 	char delimiter[1] = " ";
 	char* token;
 	char* temp_token;
-	
+
 	token = strtok(NULL, delimiter);
 	temp_token = strtok(NULL, delimiter);
 	
 	if(temp_token == NULL)
 	{
-		result_code = print_bucket(hashtable, atoi(token), stdout);
+		bucket_index = strtol(token, NULL, 10);
+
+		if(bucket_index == 0)
+			result_code = 1;
+		else
+			result_code = print_bucket(hashtable, bucket_index, stdout);
 	}
 	else
 	{
@@ -132,7 +163,7 @@ int launch_print_bucket(Hashtable* hashtable)
 		
 		fclose(out_file);
 	}
-	
+
 	return result_code;
 }
 
@@ -180,11 +211,11 @@ int launch_resize(Hashtable* hashtable)
 	
 	token = strtok(NULL, delimiter);
 		
-	if(strcmp(token, "double"))
+	if(strcmp(token, "double") == 0)
 	{
 		main_hashtable = make_double(hashtable);
 	}
-	else if(strcmp(token, "halve"))
+	else if(strcmp(token, "halve") == 0)
 	{
 		main_hashtable = make_half(hashtable);
 	}
@@ -204,7 +235,6 @@ int launch_print_hashtable(Hashtable* hashtable)
 	
 	if(token == NULL)
 	{
-		
 		return_code = print_hashtable(hashtable, stdout);
 	}
 	else
