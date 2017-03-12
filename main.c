@@ -20,12 +20,23 @@ Hashtable* main_hashtable;
 int main(int argc, char** argv)
 {
 	FILE* in_file;
-	int i = 0, code = 0;
+	int i = 0, code = 0, size = 0;
 	char* result;
 	char command[COMM_SIZE];
 
+
 	if(argc > 1)
-		main_hashtable = create_hashtable(main_hashtable, atoi(argv[1]));
+	{
+		size = strtol(argv[1], NULL, 10);
+		
+		if(size != 0)
+			main_hashtable = create_hashtable(main_hashtable, atoi(argv[1]));
+		else
+		{
+			fprintf(stderr, "Invalid size");
+			return -1;
+		}
+	}
 	else
 		fprintf(stderr, "Not OK");
 	
@@ -34,7 +45,13 @@ int main(int argc, char** argv)
 		for(i = 2; i<argc; i++)
 		{
 			in_file = fopen(argv[i], "r");
-			DIE(in_file == NULL, "File does not exist");
+
+			if(in_file == NULL)
+			{
+				free_hashtable(main_hashtable);
+				fclose(in_file);
+				DIE(in_file == NULL, "File does not exist");
+			}
 			
 			while(!feof(in_file))
 			{
@@ -43,13 +60,17 @@ int main(int argc, char** argv)
 				if(result != NULL && result[0] != '\n')
 				{
 					code = process_command(command, main_hashtable);
-					
-					DIE(code > 0, "Error");
-					
+	
 					if(code < 0)
-						fprintf(stderr, "error");
+					{
+						free_hashtable(main_hashtable);
+						fclose(in_file);
+						DIE(code < 0, "Error");
+					}
 				}
 			}
+
+			fclose(in_file);
 		}
 	}
 	else if(argc == 2)
@@ -62,10 +83,11 @@ int main(int argc, char** argv)
 			{
 				code = process_command(command, main_hashtable);
 				
-				DIE(code > 0, "Error");
-				
-				fprintf(stderr, "Error");
-
+				if(code < 0)
+				{
+					free_hashtable(main_hashtable);
+					DIE(code < 0, "Error");
+				}
 			}
 		}
 	}
@@ -79,7 +101,7 @@ int main(int argc, char** argv)
 
 int process_command(char* command, Hashtable* hashtable)
 {
-	int return_code = 1;
+	int return_code = -1;
 	char* token;
 	const char delimiter[1] = " ";
 	
@@ -108,18 +130,24 @@ int process_command(char* command, Hashtable* hashtable)
 
 	else if(strcmp(token, "print") == 0)
 		return_code = launch_print_hashtable(hashtable);
-	
+
 	return return_code;
 }
 
 int launch_add(Hashtable* hashtable)
 {
-	char* token;
+	char *token;
+	int return_code = 0;
 	char delimiter[1] = " ";
 	
 	token = strtok(NULL, delimiter);
-		
-	return add_word(hashtable, token);
+
+	if(token != NULL)
+		return_code =  add_word(hashtable, token);
+	else
+		return_code = -1;
+
+	return return_code;
 }
 
 int launch_remove(Hashtable* hashtable)
@@ -128,8 +156,11 @@ int launch_remove(Hashtable* hashtable)
 	char delimiter[1] = " ";
 	
 	token = strtok(NULL, delimiter);
-	
-	return remove_word(hashtable, token);
+
+	if(token != NULL)
+		return remove_word(hashtable, token);
+	else
+		return -1;
 }
 
 int launch_print_bucket(Hashtable* hashtable)
@@ -150,18 +181,23 @@ int launch_print_bucket(Hashtable* hashtable)
 		bucket_index = strtol(token, NULL, 10);
 
 		if(bucket_index == 0)
-			result_code = 1;
+			result_code = -1;
 		else
 			result_code = print_bucket(hashtable, bucket_index, stdout);
 	}
 	else
 	{
 		out_file = fopen(temp_token, "a");
-		DIE(out_file == NULL, "File couldn't be opened!");
 		
-		result_code = print_bucket(hashtable, atoi(token), out_file);
+		if(out_file != NULL)
+		{
 		
-		fclose(out_file);
+			result_code = print_bucket(hashtable, atoi(token), out_file);
+		
+			fclose(out_file);
+		}
+		else
+			result_code = -1;
 	}
 
 	return result_code;
@@ -185,11 +221,16 @@ int launch_find(Hashtable* hashtable)
 	else
 	{
 		out_file = fopen(temp_token, "a");
-		DIE(out_file == NULL, "File couldn't be opened!");
-		
-		return_code = find_word(hashtable, token, out_file);
-		
-		fclose(out_file);
+
+		if(out_file != NULL)
+		{
+			return_code = find_word(hashtable, token, out_file);
+			fclose(out_file);
+		}
+		else
+		{	// The file couldn't be opened
+			return_code = -1;
+		}
 	}
 	
 	return return_code;
@@ -197,7 +238,7 @@ int launch_find(Hashtable* hashtable)
 
 int launch_clear(Hashtable* hashtable)
 {
-	clear_hashtable(hashtable);	
+	clear_hashtable(hashtable);
 	
 	return 0;
 }
@@ -240,11 +281,18 @@ int launch_print_hashtable(Hashtable* hashtable)
 	else
 	{
 		out_file = fopen(token, "a");
-		DIE(out_file == NULL, "File couldn't be opened!");
+
+		if(out_file != NULL)
+		{
 		
-		return_code = print_hashtable(hashtable, out_file);
+			return_code = print_hashtable(hashtable, out_file);
 		
-		fclose(out_file);
+			fclose(out_file);
+		}
+		else
+		{
+			return_code = -1;
+		}
 	}
 	
 	return return_code;
