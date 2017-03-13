@@ -30,6 +30,7 @@ Hashtable *create_hashtable(Hashtable *hashtable, int size);
 Hashtable *make_double(Hashtable *hashtable);
 Hashtable *make_half(Hashtable *hashtable);
 
+void free_hashtable(Hashtable *hashtable);
 void clear_hashtable(Hashtable *hashtable);
 
 int add_word(Hashtable *hashtable, char *word);

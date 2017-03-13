@@ -59,7 +59,7 @@ int print_bucket(Hashtable *hashtable, int bucket_index, FILE *out_file)
 	int print_newline = 0;
 	Node *current_node;
 
-	if (bucket_index >= hashtable->size || bucket_index < 0)
+	if (bucket_index > hashtable->size || bucket_index < 0)
 		return_code = -1;
 	else {
 		current_node = hashtable->buckets[bucket_index].bucket_head;
@@ -144,7 +144,7 @@ Node *get_new_node(char *word)
 {
 	Node *new_node;
 
-	new_node = malloc(sizeof(Node));
+	new_node = (Node *)malloc(sizeof(Node));
 	new_node->next_node = NULL;
 	new_node->word = malloc((strlen(word) + 1) * sizeof(char));
 
@@ -162,9 +162,9 @@ int add_word(Hashtable *hashtable, char *word)
 	Node *new_node = NULL;
 	Node *current_node = NULL;
 
+	new_node = get_new_node(word);
+	
 	if (hashtable->buckets[position].bucket_head == NULL) {
-		new_node = get_new_node(word);
-
 		hashtable->buckets[position].bucket_head = new_node;
 
 		return_code = 0;
@@ -180,8 +180,6 @@ int add_word(Hashtable *hashtable, char *word)
 		}
 
 		if (strcmp(current_node->word, word) != 0) {
-			new_node = get_new_node(word);
-
 			current_node->next_node = new_node;
 		}
 	}

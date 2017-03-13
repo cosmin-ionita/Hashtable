@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils.h"
+
 #include "hashtable.h"
 
 #define COMM_SIZE 20000
@@ -17,15 +17,15 @@ int launch_resize(Hashtable *hashtable);
 
 Hashtable *Hash;
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
 	FILE *in_file;
 	int i = 0, code = 0, size = 0;
 	char *result;
 	char command[COMM_SIZE];
 
-
 	if (argc > 1) {
+
 		size = strtol(argv[1], NULL, 10);
 
 		if (size != 0)
@@ -34,8 +34,10 @@ int main (int argc, char **argv)
 			fprintf(stderr, "Invalid size");
 			return -1;
 		}
-	} else
-		fprintf(stderr, "Not OK");
+	} else {
+		fprintf(stderr, "The argc is 1!");
+		return EXIT_FAILURE;
+	}
 
 	if (argc > 2) {
 		for (i = 2; i < argc; i++) {
@@ -45,7 +47,9 @@ int main (int argc, char **argv)
 			if (in_file == NULL) {
 				free_hashtable(Hash);
 				fclose(in_file);
-				DIE(in_file == NULL, "File does not exist");
+
+				fprintf(stderr, "Fisierul nu exista");
+				return -1;
 			}
 
 			while (!feof(in_file)) {
@@ -57,7 +61,9 @@ int main (int argc, char **argv)
 					if (code < 0) {
 						free_hashtable(Hash);
 						fclose(in_file);
-						DIE(code < 0, "Error");
+						
+						fprintf(stderr, "Eroare");
+						return -1;
 					}
 				}
 			}
@@ -73,7 +79,9 @@ int main (int argc, char **argv)
 
 				if (code < 0) {
 					free_hashtable(Hash);
-					DIE(code < 0, "Error");
+
+					fprintf(stderr, "Eroare");
+					return -1;
 				}
 			}
 		}
@@ -89,7 +97,7 @@ int process_command(char *command, Hashtable *hashtable)
 {
 	int return_code = -1;
 	char *token;
-	const char delimiter[1] = " ";
+	const char delimiter[] = " ";
 
 	if (command[strlen(command)-1] == '\n')
 		command[strlen(command)-1] = '\0';
@@ -124,7 +132,7 @@ int launch_add(Hashtable *hashtable)
 {
 	char *token;
 	int return_code = 0;
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
@@ -139,7 +147,7 @@ int launch_add(Hashtable *hashtable)
 int launch_remove(Hashtable *hashtable)
 {
 	char *token;
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
@@ -155,7 +163,7 @@ int launch_print_bucket(Hashtable *hashtable)
 
 	int code = 0, bucket_index = -1;
 
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 	char *token;
 	char *temp_token;
 
@@ -188,7 +196,7 @@ int launch_find(Hashtable *hashtable)
 {
 	int return_code = 0;
 	FILE *out_file;
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 	char *token;
 	char *temp_token;
 
@@ -221,9 +229,8 @@ int launch_clear(Hashtable *hashtable)
 int launch_resize(Hashtable *hashtable)
 {
 	int return_code = 0;
-	FILE *out_file;
 	char *token;
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
@@ -240,14 +247,14 @@ int launch_print_hashtable(Hashtable *hashtable)
 	int return_code = 0;
 	FILE *out_file;
 	char *token;
-
-	char delimiter[1] = " ";
+	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
 	if (token == NULL) {
 		return_code = print_hashtable(hashtable, stdout);
 	} else {
+
 		out_file = fopen(token, "a");
 
 		if (out_file != NULL) {
@@ -262,4 +269,3 @@ int launch_print_hashtable(Hashtable *hashtable)
 
 	return return_code;
 }
-
