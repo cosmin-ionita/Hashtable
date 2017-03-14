@@ -1,11 +1,11 @@
 build: hashtable.o main.o
-	gcc hashtable.o main.o -o tema1 -lhash -L.
+	gcc -g -Wall hashtable.o main.o -o tema1 -lhash -L.
 
 main.o: main.c
-	gcc -c main.c -o main.o
+	gcc -g -Wall -c main.c -o main.o
 
 hashtable.o: hashtable.c
-	gcc -c hashtable.c -o hashtable.o
+	gcc -g -Wall -c hashtable.c -o hashtable.o
 
 clean:
 	rm *.o tema1

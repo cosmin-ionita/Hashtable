@@ -9,9 +9,19 @@ Hashtable *create_hashtable(Hashtable *hashtable, int size)
 
 	hashtable = malloc(sizeof(Hashtable));
 
+	if (hashtable == NULL) {
+		fprintf(stderr, "Cannot allocate memory");
+		exit(-1);
+	}
+
 	hashtable->size = size;
 
 	hashtable->buckets = malloc(size * sizeof(Bucket));
+
+	if(hashtable->buckets == NULL) {
+		fprintf(stderr, "Cannot allocate memory");
+		exit(-1);
+	}
 
 	for (i = 0; i < size; i++)
 		hashtable->buckets[i].bucket_head = NULL;
@@ -27,6 +37,8 @@ Hashtable *resize_hashtable(Hashtable *hashtable, int size)
 	Hashtable *new_hashtable = NULL;
 
 	new_hashtable = create_hashtable(new_hashtable, size);
+
+	/* copy the old hash into the new one */
 
 	for (i = 0; i < hashtable->size; i++) {
 		current_node = hashtable->buckets[i].bucket_head;
@@ -56,12 +68,17 @@ Hashtable *make_half(Hashtable *hashtable)
 int print_bucket(Hashtable *hashtable, int bucket_index, FILE *out_file)
 {
 	int return_code = 0;
-	int print_newline = 0;
 	Node *current_node;
 
-	if (bucket_index > hashtable->size || bucket_index < 0)
+	/* check for bucket_index consistency */
+
+	if (bucket_index > hashtable->size || bucket_index < 0) {
+
 		return_code = -1;
-	else {
+		fprintf(stderr, "The bucket index is invalid");
+
+	} else {	/* iterate over the selected bucket */
+
 		current_node = hashtable->buckets[bucket_index].bucket_head;
 
 		while (current_node != NULL) {
@@ -96,7 +113,9 @@ int find_word(Hashtable *hashtable, char *word, FILE *out_file)
 	Node *current_node = hashtable->buckets[position].bucket_head;
 
 	while (current_node != NULL) {
+
 		if (strcmp(current_node->word, word) == 0) {
+
 			fprintf(out_file, "%s\n", "True");
 
 			return return_code;
@@ -112,18 +131,22 @@ int find_word(Hashtable *hashtable, char *word, FILE *out_file)
 void clear_hashtable(Hashtable *hashtable)
 {
 	int i = 0;
-	Node *temp_node;
+
+	Node *back_node;
 	Node *head_node;
 
+	/* iterate over the buckets and free all nodes */
 	for (i = 0; i < hashtable->size; i++) {
+
 		head_node = hashtable->buckets[i].bucket_head;
 
 		while (head_node != NULL) {
-			temp_node = head_node;
+
+			back_node = head_node;
 			head_node = head_node->next_node;
 
-			free(temp_node->word);
-			free(temp_node);
+			free(back_node->word);
+			free(back_node);
 		}
 
 		hashtable->buckets[i].bucket_head = NULL;
@@ -140,13 +163,26 @@ void free_hashtable(Hashtable *hashtable)
 	free(hashtable);
 }
 
+/* creates a new node with the specified word */
+
 Node *get_new_node(char *word)
 {
 	Node *new_node;
 
-	new_node = (Node *)malloc(sizeof(Node));
+	new_node = malloc(sizeof(Node));
+
+	if (new_node == NULL) {
+		fprintf(stderr, "Cannot allocate memory");
+		exit(-1);
+	}
+
 	new_node->next_node = NULL;
 	new_node->word = malloc((strlen(word) + 1) * sizeof(char));
+
+	if (new_node->word == NULL) {
+		fprintf(stderr, "Cannot allocate memory");
+		exit(-1);
+	}
 
 	strcpy(new_node->word, word);
 
@@ -162,24 +198,32 @@ int add_word(Hashtable *hashtable, char *word)
 	Node *new_node = NULL;
 	Node *current_node = NULL;
 
-	new_node = get_new_node(word);
-	
-	if (hashtable->buckets[position].bucket_head == NULL) {
-		hashtable->buckets[position].bucket_head = new_node;
+	/* if it's the first word in the bucket */
 
-		return_code = 0;
-	} else {
+	if (hashtable->buckets[position].bucket_head == NULL) {
+		new_node = get_new_node(word);
+		hashtable->buckets[position].bucket_head = new_node;
+	}
+
+	else {
 		current_node = hashtable->buckets[position].bucket_head;
 
+		/* iterate until the last node is reached */
+
 		while (current_node->next_node != NULL) {
-			if (strcmp(current_node->word, word) == 0) {
-				return_code = 1;
+
+			/* if the word is already in the hash */
+
+			if (strcmp(current_node->word, word) == 0)
 				break;
-			}
+
 			current_node = current_node->next_node;
 		}
 
+		/* if the last node doesn't contain the word */
+
 		if (strcmp(current_node->word, word) != 0) {
+			new_node = get_new_node(word);
 			current_node->next_node = new_node;
 		}
 	}
@@ -192,8 +236,14 @@ int remove_word(Hashtable *Hash, char *word)
 	int pos = hash(word, Hash->size), return_code = 0;
 
 	Node *current_node = Hash->buckets[pos].bucket_head;
+
+	/* back_node keeps is always behind the current_node */
 	Node *back_node = current_node;
+
+	/* temp_node is used to deallocate memory */
 	Node *temp_node;
+
+	/* loop until we reach the word or NULL */
 
 	while (current_node != NULL && strcmp(current_node->word, word) != 0) {
 		back_node = current_node;
@@ -201,6 +251,8 @@ int remove_word(Hashtable *Hash, char *word)
 	}
 
 	if (current_node != NULL) {
+
+		/* if it's the first node in the bucket */
 		if (back_node == current_node) {
 			temp_node = Hash->buckets[pos].bucket_head;
 
@@ -208,6 +260,7 @@ int remove_word(Hashtable *Hash, char *word)
 
 			free(temp_node->word);
 			free(temp_node);
+
 		} else {
 			back_node->next_node = current_node->next_node;
 

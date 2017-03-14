@@ -4,8 +4,11 @@
 #include "hashtable.h"
 
 #define COMM_SIZE 20000
+#define ERROR_CODE -1
 
 int process_command(char *command, Hashtable *hashtable);
+
+void system_exit(FILE *opened_file);
 
 int launch_add(Hashtable *hashtable);
 int launch_remove(Hashtable *hashtable);
@@ -20,7 +23,9 @@ Hashtable *Hash;
 int main(int argc, char **argv)
 {
 	FILE *in_file;
+
 	int i = 0, code = 0, size = 0;
+
 	char *result;
 	char command[COMM_SIZE];
 
@@ -32,25 +37,21 @@ int main(int argc, char **argv)
 			Hash = create_hashtable(Hash, size);
 		else {
 			fprintf(stderr, "Invalid size");
-			return -1;
+			return ERROR_CODE;
 		}
 	} else {
 		fprintf(stderr, "The argc is 1!");
-		return EXIT_FAILURE;
+		return ERROR_CODE;
 	}
 
-	if (argc > 2) {
+	if (argc > 2) {	/* if we have multiple files as input */
+
 		for (i = 2; i < argc; i++) {
 
 			in_file = fopen(argv[i], "r");
 
-			if (in_file == NULL) {
-				free_hashtable(Hash);
-				fclose(in_file);
-
-				fprintf(stderr, "Fisierul nu exista");
-				return -1;
-			}
+			if (in_file == NULL)
+				system_exit(in_file);
 
 			while (!feof(in_file)) {
 				result = fgets(command, COMM_SIZE, in_file);
@@ -58,39 +59,42 @@ int main(int argc, char **argv)
 				if (result != NULL && result[0] != '\n') {
 					code = process_command(command, Hash);
 
-					if (code < 0) {
-						free_hashtable(Hash);
-						fclose(in_file);
-						
-						fprintf(stderr, "Eroare");
-						return -1;
-					}
+					if (code < 0)
+						system_exit(in_file);
 				}
 			}
 
 			fclose(in_file);
 		}
-	} else if (argc == 2) {
+	} else if (argc == 2) {	/* if we read from stdin */
+
 		while (!feof(stdin)) {
 			result = fgets(command, COMM_SIZE, stdin);
 
 			if (result != NULL && result[0] != '\n') {
+
 				code = process_command(command, Hash);
 
-				if (code < 0) {
-					free_hashtable(Hash);
-
-					fprintf(stderr, "Eroare");
-					return -1;
-				}
+				if (code < 0)
+					system_exit(NULL);
 			}
 		}
-	} else
-		fprintf(stderr, "NOT OK");
+	}
 
 	free_hashtable(Hash);
 
 	return 0;
+}
+
+/* deallocate resources and exit */
+void system_exit(FILE *opened_file)
+{
+	free_hashtable(Hash);
+
+	if (opened_file != NULL)
+		fclose(opened_file);
+
+	exit(ERROR_CODE);
 }
 
 int process_command(char *command, Hashtable *hashtable)
@@ -99,8 +103,12 @@ int process_command(char *command, Hashtable *hashtable)
 	char *token;
 	const char delimiter[] = " ";
 
+	/* replace the \n with NULL */
+
 	if (command[strlen(command)-1] == '\n')
 		command[strlen(command)-1] = '\0';
+
+	/* get the first command token */
 
 	token = strtok(command, delimiter);
 
@@ -138,8 +146,10 @@ int launch_add(Hashtable *hashtable)
 
 	if (token != NULL)
 		return_code =  add_word(hashtable, token);
-	else
+	else {
 		return_code = -1;
+		fprintf(stderr, "The word wasn't supplied");
+	}
 
 	return return_code;
 }
@@ -147,14 +157,19 @@ int launch_add(Hashtable *hashtable)
 int launch_remove(Hashtable *hashtable)
 {
 	char *token;
+	int return_code = 0;
 	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
 	if (token != NULL)
-		return remove_word(hashtable, token);
-	else
-		return -1;
+		return_code = remove_word(hashtable, token);
+	else {
+		return_code = -1;
+		fprintf(stderr, "The word wasn't supplied");
+	}
+
+	return return_code;
 }
 
 int launch_print_bucket(Hashtable *hashtable)
@@ -164,29 +179,37 @@ int launch_print_bucket(Hashtable *hashtable)
 	int code = 0, bucket_index = -1;
 
 	const char delimiter[] = " ";
+
 	char *token;
-	char *temp_token;
+	char *file_name;
 
 	token = strtok(NULL, delimiter);
-	temp_token = strtok(NULL, delimiter);
+	file_name = strtok(NULL, delimiter);
 
-	if (temp_token == NULL) {
+	/* if we don't have a file as an output */
+
+	if (file_name == NULL) {
+
 		bucket_index = strtol(token, NULL, 10);
 
-		if (bucket_index == 0)
+		if (bucket_index == 0) {
 			code = -1;
-		else
+			fprintf(stderr, "Invalid bucket index");
+		} else
 			code = print_bucket(hashtable, bucket_index, stdout);
 	} else {
-		out_file = fopen(temp_token, "a");
+		out_file = fopen(file_name, "a");
 
 		if (out_file != NULL) {
 
 			code = print_bucket(hashtable, atoi(token), out_file);
 
 			fclose(out_file);
-		} else
+
+		} else {
 			code = -1;
+			fprintf(stderr, "The file couldn't be opened");
+		}
 	}
 
 	return code;
@@ -195,24 +218,31 @@ int launch_print_bucket(Hashtable *hashtable)
 int launch_find(Hashtable *hashtable)
 {
 	int return_code = 0;
+
 	FILE *out_file;
+
 	const char delimiter[] = " ";
+
 	char *token;
-	char *temp_token;
+	char *file_name;
 
 	token = strtok(NULL, delimiter);
-	temp_token = strtok(NULL, delimiter);
+	file_name = strtok(NULL, delimiter);
 
-	if (temp_token == NULL) {
+	if (file_name == NULL) {
 		return_code = find_word(hashtable, token, stdout);
+
 	} else {
-		out_file = fopen(temp_token, "a");
+		out_file = fopen(file_name, "a");
 
 		if (out_file != NULL) {
+
 			return_code = find_word(hashtable, token, out_file);
 			fclose(out_file);
+
 		} else {
 			return_code = -1;
+			fprintf(stderr, "The file couldn't be opened");
 		}
 	}
 
@@ -229,6 +259,7 @@ int launch_clear(Hashtable *hashtable)
 int launch_resize(Hashtable *hashtable)
 {
 	int return_code = 0;
+
 	char *token;
 	const char delimiter[] = " ";
 
@@ -236,6 +267,7 @@ int launch_resize(Hashtable *hashtable)
 
 	if (strcmp(token, "double") == 0)
 		Hash = make_double(hashtable);
+
 	else if (strcmp(token, "halve") == 0)
 		Hash = make_half(hashtable);
 
@@ -245,15 +277,18 @@ int launch_resize(Hashtable *hashtable)
 int launch_print_hashtable(Hashtable *hashtable)
 {
 	int return_code = 0;
+
 	FILE *out_file;
+
 	char *token;
 	const char delimiter[] = " ";
 
 	token = strtok(NULL, delimiter);
 
-	if (token == NULL) {
+	if (token == NULL)
 		return_code = print_hashtable(hashtable, stdout);
-	} else {
+
+	else {
 
 		out_file = fopen(token, "a");
 
@@ -262,8 +297,10 @@ int launch_print_hashtable(Hashtable *hashtable)
 			return_code = print_hashtable(hashtable, out_file);
 
 			fclose(out_file);
+
 		} else {
 			return_code = -1;
+			fprintf(stderr, "The file couldn't be opened");
 		}
 	}
 
